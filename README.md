@@ -1,37 +1,62 @@
 # TripPilot AI
 
-A travel-planning portfolio project. Day 1 delivers a responsive itinerary builder with three curated destinations, group budget estimates, browser-local saving, and JSON export.
+A React + TypeScript travel-planning portfolio project. Create curated demo itineraries with illustrative group budgets, save a trip in your browser, and export it as JSON.
 
-## Run
+## Run locally
 
-Requires Python 3 for a local server, and Node.js 20+ for tests.
+Requires Node.js 22.12+ (Node 22 LTS is used in CI).
 
 ```sh
-python3 -m http.server 8000 --directory dist
-node --test tests/planner.test.cjs
+npm ci
+npm run dev
 ```
 
-Open http://localhost:8000. No dependencies or API keys are needed.
+Open the local URL printed by Vite. No API key is required.
 
-## What is implemented
+## Validation and production build
 
-- Jaipur, Goa and Manali demo itineraries for 1–7 days and 1–10 travellers.
-- Travel-style choices and validation.
-- Illustrative group estimates, with an explicit over-budget message.
-- Local save/restore and downloadable structured itinerary JSON.
-- Automated tests for planning, cost calculations and invalid input.
+```sh
+npm run typecheck
+npm test
+npm run build
+npm run preview
+```
 
-## Limits
+GitHub Actions runs type checking, tests and a production build on pushes to `main` and pull requests. Deployment is separate from CI. Vite emits static assets to `dist/`; source files, not generated bundles, are committed.
 
-This is a deterministic prototype, not an AI-powered service yet. Costs are illustrative, not researched prices. They exclude travel to the destination, admission tickets and paid activities. Suggestions are not verified for current opening hours, availability or weather. Days after day 3 revisit the curated suggestions. Saved trips are local to one browser; there is no account, REST API, database or booking integration.
+## Implemented
 
-## Next meaningful milestones
+- Responsive React interface with the original forest-green, sage and ivory dark theme.
+- Reusable trip form, itinerary and day-card components.
+- TypeScript models for trip inputs, budget estimates and day-by-day itineraries.
+- Runtime validation for user input and restored trip data.
+- Jaipur, Goa and Manali suggestions for 1–7 days and 1–10 travellers.
+- Over-budget warnings, browser-local save/restore, and downloadable JSON.
+- Planner and UI tests covering form submission, storage failures, corrupt saved data, backwards compatibility, and downloads.
 
-1. Port the interface to React + TypeScript and test its form interactions.
-2. Add a validated REST API and SQL trip storage.
-3. Add an AI provider behind a server-side adapter, with grounded destination data and a demo fallback.
-4. Add integration tests, CI, and deployment documentation.
+## Source map
 
-## Architecture
+| File | Responsibility |
+| --- | --- |
+| `src/types.ts` | Trip input, destination, style and itinerary types |
+| `src/planner.ts` | Curated data, validation, budget calculations |
+| `src/components/TripForm.tsx` | Controlled, labelled trip form |
+| `src/components/Itinerary.tsx` | Budget summary and day cards |
+| `src/storage.ts` | Save/restore and JSON download |
+| `src/App.tsx` | Form, generated trip and feedback state |
+| `tests/` | Vitest + Testing Library tests |
+| `.github/workflows/ci.yml` | Automated checks and build |
 
-`planner.js` is a pure planning module; `app.js` handles browser interactions; `style.css` handles layout. The pure module runs in the browser and in Node tests. AI assistance was used to build this initial version. No production AI capability is claimed.
+Form state and generated trip are separate: editing a field does not change the displayed trip until submission. Save and export use the displayed trip. Restoration recalculates costs from validated inputs, so stored derived values are not trusted. Trips saved by the original JavaScript version remain compatible.
+
+## Current limits
+
+This is a deterministic prototype, not an AI-powered service yet. Costs are illustrative, not live prices. They exclude travel to the destination, admission tickets and paid activities. Suggestions are not verified for current opening hours, availability or weather. Days after day 3 revisit the curated suggestions. Saved trips are local to one browser. There is no account, backend API, SQL database or booking integration yet. Tests use a simulated DOM; real-browser visual verification is separate.
+
+## Next milestones
+
+1. Add a validated REST API and SQL trip storage.
+2. Add an AI provider behind a server-side adapter, with grounded destination data and a demo fallback.
+3. Add API integration tests and documented deployment configuration.
+
+AI coding assistance was used during implementation. This does not imply the deployed planner uses AI to generate itineraries.
