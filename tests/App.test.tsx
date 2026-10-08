@@ -1,7 +1,18 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
+import * as api from '../src/api';
+import type { SavedTrip } from '../server/repository';
+vi.mock('../src/api', () => ({ generate: vi.fn(), save: vi.fn(), list: vi.fn() }));
+let cloudTrip: SavedTrip | undefined;
+beforeEach(() => {
+  cloudTrip = undefined;
+  const generation = { mode: 'demo' as const, reason: 'not_configured' as const, catalogVersion: '2026-10-09-v1' };
+  vi.mocked(api.generate).mockImplementation(async input => ({ trip: plan(input), generation }));
+  vi.mocked(api.save).mockImplementation(async input => { cloudTrip = { id: 'test-trip', createdAt: new Date().toISOString(), trip: plan(input), generation }; return cloudTrip; });
+  vi.mocked(api.list).mockImplementation(async () => ({ trips: cloudTrip ? [cloudTrip] : [] }));
+});
 import { plan, defaultInput } from '../src/planner';
 
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); });
@@ -27,7 +38,7 @@ describe('planner interactions', () => {
     await user.click(screen.getByRole('button', { name: 'My saved trip' }));
     expect(screen.getByLabelText('Destination')).toHaveValue('Jaipur');
     expect(screen.getByRole('heading', { name: '3 days in the Pink City' })).toBeInTheDocument();
-    expect(screen.getByText('Saved trip restored.')).toBeInTheDocument();
+    expect(screen.getByText('Saved trip restored from your account.')).toBeInTheDocument();
   });
   it('restores the previous version’s saved JSON and recalculates derived values', async () => {
     localStorage.setItem('trippilot:trip', JSON.stringify({ ...plan(defaultInput), estimate: 0, nickname: '<script>tampered</script>' }));
@@ -45,9 +56,9 @@ describe('planner interactions', () => {
     expect(screen.getByRole('heading', { name: '3 days in the Pink City' })).toBeInTheDocument();
   });
   it('reports unavailable storage', async () => {
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Storage denied'); });
+    vi.mocked(api.save).mockRejectedValue(new Error('Trip storage is unavailable.'));
     render(<App />); await userEvent.click(screen.getByRole('button', { name: 'Save this trip' }));
-    expect(screen.getByText(/Browser storage is unavailable/)).toBeInTheDocument();
+    expect(screen.getByText(/Trip storage is unavailable/)).toBeInTheDocument();
   });
   it('exports the currently generated trip and releases the blob URL', async () => {
     const createObjectURL = vi.fn(() => 'blob:trip'); const revokeObjectURL = vi.fn();

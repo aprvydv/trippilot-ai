@@ -1,8 +1,8 @@
 import type { FormEvent } from 'react';
 import { destinations, type TripInput } from '../types';
 
-interface Props { input: TripInput; onChange: (input: TripInput) => void; onSubmit: () => void }
-export function TripForm({ input, onChange, onSubmit }: Props) {
+interface Props { input: TripInput; onChange: (input: TripInput) => void; onSubmit: () => void; busy?: boolean }
+export function TripForm({ input, onChange, onSubmit, busy }: Props) {
   const update = <K extends keyof TripInput>(key: K, value: TripInput[K]) => onChange({ ...input, [key]: value });
   const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); onSubmit(); };
   return <form onSubmit={submit}>
@@ -14,7 +14,7 @@ export function TripForm({ input, onChange, onSubmit }: Props) {
     </div>
     <label>Total budget for the group (₹)<input type="number" min="1000" max="1000000" step="100" required value={Number.isNaN(input.budget) ? '' : input.budget} onChange={e => update('budget', e.target.valueAsNumber)} /></label>
     <label>Your travel style<select value={input.style} onChange={e => update('style', e.target.value as TripInput['style'])}><option value="balanced">A bit of everything</option><option value="culture">Culture & history</option><option value="nature">Nature & slow days</option></select></label>
-    <button className="primary" type="submit">Plan my escape <span aria-hidden="true">↗</span></button>
-    <p className="note">Demo planner · curated suggestions and illustrative costs. Live prices, bookings and AI generation are planned features.</p>
+    <button className="primary" type="submit" disabled={busy}>Plan my escape <span aria-hidden="true">↗</span></button>
+    <p className="note">Curated destination data · illustrative costs. AI planning is used when configured; otherwise the demo planner takes over. Prices and availability are not live.</p>
   </form>;
 }

@@ -5,7 +5,8 @@ const key = 'trippilot:trip';
 export function saveTrip(trip: Trip): void { localStorage.setItem(key, JSON.stringify(trip)); }
 export function restoreTrip(): Trip | null {
   const raw = localStorage.getItem(key);
-  return raw === null ? null : plan(JSON.parse(raw));
+  if (raw === null) return null;
+  try { return plan(JSON.parse(raw)); } catch { throw new Error('Could not restore the saved trip.'); }
 }
 
 export function downloadTrip(trip: Trip): void {

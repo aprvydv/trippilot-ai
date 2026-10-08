@@ -1,6 +1,6 @@
 import { destinations, travelStyles, type DestinationGuide, type TripInput, type Trip } from './types';
 
-const guides: Record<TripInput['destination'], DestinationGuide> = {
+export const guides: Record<TripInput['destination'], DestinationGuide> = {
   Jaipur: { nickname: 'the Pink City', daily: 2200, days: [
     ['Fort walls & old streets', 'Amber Fort', 'City Palace & Jantar Mantar', 'Old-city food walk'],
     ['The heart of Jaipur', 'Hawa Mahal exterior & market walk', 'Albert Hall Museum', 'Local Rajasthani dinner'],
