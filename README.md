@@ -10,9 +10,9 @@ A full-stack travel-planning portfolio project built with React and TypeScript. 
 
 > **Current mode: deterministic demo.** The deployed app has `AI_ENABLED=false` and makes no OpenAI requests. The optional server-side AI adapter is implemented and tested with mocked responses; successful live AI generation has not been verified. No API key or paid AI credits are needed for the demo planner or tests.
 
-![TripPilot's forest-green interface showing a two-day Manali itinerary, group budget and save/export actions](docs/images/manali-demo.png)
+![TripPilot Ink and Sand interface with glass trip controls, a paper itinerary and budget summary](docs/images/ink-sand-desktop.jpg)
 
-*Actual application screenshot captured during an earlier provider-fallback test. The “AI is unavailable” message reflects that test; the deployment now intentionally uses demo mode.*
+*Actual browser screenshot of the Ink & Sand redesign. The planner starts with a curated Jaipur demo.*
 
 ## What you can do
 
@@ -23,7 +23,7 @@ A full-stack travel-planning portfolio project built with React and TypeScript. 
 - **Export JSON:** download the itinerary for reuse outside the app.
 - **See the generation mode:** demo and AI output are labelled explicitly.
 
-The interface uses forest green, sage and ivory, with large typography and a responsive form-and-itinerary layout.
+The Ink & Sand interface combines a dark ink background, sand paper itinerary, dusty-blue glass controls and a restrained travel-photo collage. Day tabs support arrow-key navigation; the layout stacks on mobile. Decorative travel images are AI-generated illustrations.
 
 ## Engineering decisions
 
@@ -132,7 +132,7 @@ These are planned, not implemented:
 
 - A saved-trips list with open and delete actions in the UI.
 - Editing a saved trip's inputs and generating a revised itinerary.
-- Broader mobile and keyboard-accessibility verification.
+- Broader device and assistive-technology verification.
 - Rate limiting and a public-sharing security review before opening the hosted app to visitors.
 
 ## Development transparency

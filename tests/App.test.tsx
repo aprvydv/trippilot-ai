@@ -25,8 +25,12 @@ describe('planner interactions', () => {
     await user.clear(screen.getByLabelText(/Total budget/)); await user.type(screen.getByLabelText(/Total budget/), '3000');
     await user.click(screen.getByRole('button', { name: /Plan my escape/ }));
     const result = screen.getByRole('region', { name: 'Your itinerary' });
-    expect(within(result).getByRole('heading', { name: '2 days in the coast' })).toBeInTheDocument();
-    expect(within(result).getAllByRole('article')).toHaveLength(2);
+    expect(within(result).getByRole('heading', { name: 'Your two-day escape' })).toBeInTheDocument();
+    expect(within(result).getAllByRole('tab')).toHaveLength(2);
+    await user.click(within(result).getByRole('tab', { name: 'Day 02' }));
+    expect(within(result).getByRole('tabpanel')).toHaveAccessibleName('Day 02');
+    await user.keyboard('{ArrowLeft}');
+    expect(within(result).getByRole('tab', { name: 'Day 01' })).toHaveFocus();
     expect(within(result).getByText(/above your budget/)).toHaveTextContent('₹8,200');
   });
   it('saves the generated trip and restores it after form changes', async () => {
@@ -34,16 +38,16 @@ describe('planner interactions', () => {
     await user.click(screen.getByRole('button', { name: 'Save this trip' }));
     await user.selectOptions(screen.getByLabelText('Destination'), 'Manali');
     await user.click(screen.getByRole('button', { name: /Plan my escape/ }));
-    expect(screen.getByRole('heading', { name: '3 days in the mountains' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Your three-day escape' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'My saved trip' }));
     expect(screen.getByLabelText('Destination')).toHaveValue('Jaipur');
-    expect(screen.getByRole('heading', { name: '3 days in the Pink City' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Your three-day escape' })).toBeInTheDocument();
     expect(screen.getByText('Saved trip restored from your account.')).toBeInTheDocument();
   });
   it('restores the previous version’s saved JSON and recalculates derived values', async () => {
     localStorage.setItem('trippilot:trip', JSON.stringify({ ...plan(defaultInput), estimate: 0, nickname: '<script>tampered</script>' }));
     render(<App />); await userEvent.click(screen.getByRole('button', { name: 'My saved trip' }));
-    expect(screen.getByRole('heading', { name: '3 days in the Pink City' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Your three-day escape' })).toBeInTheDocument();
     expect(screen.getByText('₹13,200')).toBeInTheDocument();
   });
   it('handles missing and corrupt saved trips without losing the current itinerary', async () => {
@@ -53,7 +57,7 @@ describe('planner interactions', () => {
     localStorage.setItem('trippilot:trip', '{broken');
     await user.click(screen.getByRole('button', { name: 'My saved trip' }));
     expect(screen.getByText('Could not restore the saved trip.')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '3 days in the Pink City' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Your three-day escape' })).toBeInTheDocument();
   });
   it('reports unavailable storage', async () => {
     vi.mocked(api.save).mockRejectedValue(new Error('Trip storage is unavailable.'));
