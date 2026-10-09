@@ -20,6 +20,8 @@ Use the actual filename in `drizzle/`. Apply pending local migrations once, in o
 
 ## AI configuration
 
+The current hosted portfolio deployment intentionally uses `AI_ENABLED=false`. It runs the deterministic planner without provider requests. No paid API credits are needed for demo planning or the test suite.
+
 | Server value | Purpose | Default |
 | --- | --- | --- |
 | `AI_ENABLED` | Enables provider requests only when exactly `true` | Disabled |
@@ -28,7 +30,9 @@ Use the actual filename in `drizzle/`. Apply pending local migrations once, in o
 
 Configure hosted values with Sites runtime environment tools. For OpenAI key creation/activation, enable OpenAI Developers and follow its API-key skill and approval flow. No key is included in this repository, build or client bundle. Missing configuration activates the deterministic demo fallback. Local values belong in ignored runtime files; `.env.example` documents names only.
 
-The adapter calls the fixed OpenAI Chat Completions endpoint with strict structured output, catalog ID enums and a 12-second timeout. It validates the returned day count and all activity IDs independently. Provider failure, timeout, refusal, invalid JSON or unsupported activities selects the demo plan. Costs are always computed by the server. No provider credentials, raw errors or provider response content are returned to the browser.
+The adapter calls the fixed OpenAI Chat Completions endpoint with strict structured output, catalog ID enums and a 12-second timeout. It validates the returned day count and all activity IDs independently. Provider failure, timeout, refusal, invalid JSON or unsupported activities selects the demo plan. Costs are always computed by the server. No provider credentials, raw errors or provider response content are returned to the browser. Server diagnostics record a failure category, HTTP status and an allowlisted error code when available; they omit credentials, prompts, raw provider messages and generated content. A status-only 429 does not establish whether the cause is rate limiting or exhausted quota; check billing and limits before classifying it.
+
+`/api/health` reports configuration only. An `ai: "configured"` result does not prove a successful provider request. Verify a newly generated trip's `generation.mode` before claiming live AI works.
 
 Destination grounding uses `server/catalog.ts`, version `2026-10-09-v1`, built from the project's curated suggestions. It does not claim live availability, sourced prices, or externally verified travel data. AI rearranges allowed activities; it does not browse or book.
 
