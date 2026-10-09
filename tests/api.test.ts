@@ -90,6 +90,21 @@ describe('REST API and SQL integration', () => {
     const result = await response.json(); expect(result.generation.mode).toBe('ai'); expect(result.trip.estimate).toBe(13200);
     expect(result.trip.itinerary[0].morning).toBe(activities('Jaipur')[0].name);
   });
+  it.each([
+    [429, 'insufficient_quota', 'quota'],
+    [429, 'rate_limit_exceeded', 'rate_limit'],
+    [401, 'invalid_api_key', 'authentication'],
+    [404, 'model_not_found', 'access'],
+    [503, 'untrusted-secret-code', 'provider'],
+  ])('logs safe diagnostics for provider status %s and code %s', async (status, code, category) => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetcher = vi.fn(async () => Response.json({ error: { code, message: 'sensitive provider message' } }, { status }));
+    const response = await handleApi(req('/plan', 'POST', defaultInput), { DB: db, OPENAI_API_KEY: 'secret-test-key', AI_ENABLED: 'true' }, fetcher);
+    expect((await response.json()).generation.mode).toBe('demo');
+    const metadata = JSON.parse(warning.mock.calls[0][1]);
+    expect(metadata).toEqual({ category, status, ...(code === 'untrusted-secret-code' ? {} : { code }) });
+    expect(JSON.stringify(warning.mock.calls)).not.toMatch(/secret-test-key|sensitive provider message|untrusted-secret-code/);
+  });
   it.each(['outage', 'invalid_json', 'unknown_place', 'wrong_day_count', 'timeout', 'refusal'])('falls back for %s', async failure => {
     const fetcher = vi.fn(async () => {
       if (failure === 'timeout') throw new Error('Timeout');

@@ -6,6 +6,7 @@ export interface GeneratedTrip { trip: Trip; planId?: string; generation: { mode
 export interface AISettings { OPENAI_API_KEY?: string; AI_ENABLED?: string; AI_MODEL?: string }
 type Fetcher = typeof fetch;
 const slotNames = ['morning', 'afternoon', 'evening'] as const;
+const safeErrorCodes = new Set(['invalid_api_key', 'insufficient_quota', 'rate_limit_exceeded', 'model_not_found', 'permission_denied']);
 
 export async function generateTrip(input: TripInput, settings: AISettings, fetcher: Fetcher = fetch): Promise<GeneratedTrip> {
   const fallback = plan(input);
@@ -14,6 +15,12 @@ export async function generateTrip(input: TripInput, settings: AISettings, fetch
   const catalog = activities(input.destination);
   const ids = catalog.map(item => item.id);
   const slot = { type: 'string', enum: ids };
+  let stage: 'request' | 'validation' = 'request';
+  const unavailable = (category: string, status?: number, code?: string) => {
+    // Never log keys, headers, provider messages, prompts or generated content.
+    console.warn('trippilot_ai_fallback', JSON.stringify({ category, ...(status === undefined ? {} : { status }), ...(code ? { code } : {}) }));
+    return demo('provider_unavailable');
+  };
   try {
     const response = await fetcher('https://api.openai.com/v1/chat/completions', {
       method: 'POST', signal: AbortSignal.timeout(12000),
@@ -27,12 +34,19 @@ export async function generateTrip(input: TripInput, settings: AISettings, fetch
         } } },
       }),
     });
-    if (!response.ok) return demo('provider_unavailable');
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null) as { error?: { code?: unknown } } | null;
+      const rawCode = errorBody?.error?.code;
+      const code = typeof rawCode === 'string' && safeErrorCodes.has(rawCode) ? rawCode : undefined;
+      const category = code === 'insufficient_quota' ? 'quota' : response.status === 401 ? 'authentication' : response.status === 429 ? 'rate_limit' : response.status === 403 || code === 'model_not_found' ? 'access' : 'provider';
+      return unavailable(category, response.status, code);
+    }
+    stage = 'validation';
     const body = await response.json() as { choices?: { message?: { content?: string; refusal?: string }; finish_reason?: string }[] };
     const choice = body.choices?.[0];
-    if (!choice?.message?.content || choice.message.refusal || choice.finish_reason !== 'stop') return demo('provider_unavailable');
+    if (!choice?.message?.content || choice.message.refusal || choice.finish_reason !== 'stop') return unavailable('invalid_response');
     const result: unknown = JSON.parse(choice.message.content);
-    if (!result || typeof result !== 'object' || !('days' in result) || !Array.isArray(result.days) || result.days.length !== input.days) return demo('provider_unavailable');
+    if (!result || typeof result !== 'object' || !('days' in result) || !Array.isArray(result.days) || result.days.length !== input.days) return unavailable('invalid_response');
     const selected = result.days.map((day: unknown, index: number) => {
       if (!day || typeof day !== 'object') throw new Error('Invalid day');
       const value = day as Record<string, unknown>;
@@ -41,5 +55,5 @@ export async function generateTrip(input: TripInput, settings: AISettings, fetch
       return { day: index + 1, title: `Explore ${input.destination} · Day ${index + 1}`, morning: resolved[0]!, afternoon: resolved[1]!, evening: resolved[2]! };
     });
     return { trip: { ...fallback, itinerary: selected }, generation: { mode: 'ai', reason: 'configured', catalogVersion } };
-  } catch { return demo('provider_unavailable'); }
+  } catch { return unavailable(stage === 'request' ? 'network' : 'invalid_response'); }
 }
