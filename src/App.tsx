@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { BookmarkSimple, MapPin, Mountains } from '@phosphor-icons/react';
+import { BookmarkSimple, Mountains } from '@phosphor-icons/react';
 import { defaultInput, plan } from './planner';
 import { downloadTrip, restoreTrip } from './storage';
 import * as api from './api';
@@ -23,10 +23,10 @@ export default function App() {
     <a href="#trip-settings" className="skip-link">Skip to trip settings</a>
     <header><a className="logo" href="./"><Mountains weight="bold" size={34} aria-hidden="true" />TripPilot AI</a><span className="mode-label">{generation.mode === 'ai' ? 'AI curated' : 'Demo mode'}</span><button className="saved-link" type="button" disabled={busy} onClick={restore}><BookmarkSimple size={23} aria-hidden="true" /><span>My saved trip</span></button></header>
     <main>
-      <section className="intro" aria-label="Plan your next escape"><div className="hero-copy"><h1>Less planning.<br />More getting lost.</h1><p>A thoughtful little itinerary for your next escape.</p><div className="destinations" aria-label="Choose a destination">{(['Manali', 'Goa', 'Jaipur'] as const).map(destination => <button key={destination} type="button" aria-pressed={input.destination === destination} onClick={() => setInput({ ...input, destination })}>{input.destination === destination && <MapPin size={20} weight="fill" aria-hidden="true" />}{destination}</button>)}</div></div><img className="travel-collage" src="/images/travel-collage.webp" alt="Illustrated travel photo prints of a Himalayan valley and forest path, captioned Manali, a slower kind of escape" fetchPriority="high" /></section>
+      <section className="intro" aria-label="Plan your next escape"><p className="eyebrow">A little direction. A lot of possibility.</p><h1>Your next escape.</h1><p>Choose a place. We’ll take care of the plan.</p></section>
       <div id="trip-settings"><TripForm input={input} onChange={setInput} onSubmit={generate} busy={busy} /></div>
       <Itinerary trip={trip} status={status} onSave={save} onDownload={download} busy={busy} mode={generation.mode} />
-      <footer><span>A little direction. A lot of possibility.</span><span>TripPilot AI · Portfolio edition</span></footer>
+      <footer>Made for the journey.</footer>
     </main>
   </>;
 }

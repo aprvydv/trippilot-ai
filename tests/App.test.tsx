@@ -22,6 +22,7 @@ describe('planner interactions', () => {
     const user = userEvent.setup(); render(<App />);
     await user.selectOptions(screen.getByLabelText('Destination'), 'Goa');
     await user.clear(screen.getByLabelText('Days')); await user.type(screen.getByLabelText('Days'), '2');
+    await user.click(screen.getByText('Budget & preferences'));
     await user.clear(screen.getByLabelText(/Total budget/)); await user.type(screen.getByLabelText(/Total budget/), '3000');
     await user.click(screen.getByRole('button', { name: /Plan my escape/ }));
     const result = screen.getByRole('region', { name: 'Your itinerary' });

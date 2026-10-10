@@ -10,9 +10,9 @@ A full-stack travel-planning portfolio project built with React and TypeScript. 
 
 > **Current mode: deterministic demo.** The deployed app has `AI_ENABLED=false` and makes no OpenAI requests. The optional server-side AI adapter is implemented and tested with mocked responses; successful live AI generation has not been verified. No API key or paid AI credits are needed for the demo planner or tests.
 
-![TripPilot Ink and Sand interface with glass trip controls, a paper itinerary and budget summary](docs/images/ink-sand-desktop.jpg)
+![TripPilot minimal glass interface with compact trip controls and a clean itinerary](docs/images/minimal-desktop.jpg)
 
-*Actual browser screenshot of the Ink & Sand redesign. The planner starts with a curated Jaipur demo.*
+*Actual browser screenshot of the minimal liquid-glass redesign. The planner starts with a curated Jaipur demo.*
 
 ## What you can do
 
@@ -23,7 +23,7 @@ A full-stack travel-planning portfolio project built with React and TypeScript. 
 - **Export JSON:** download the itinerary for reuse outside the app.
 - **See the generation mode:** demo and AI output are labelled explicitly.
 
-The Ink & Sand interface combines a dark ink background, sand paper itinerary, dusty-blue glass controls and a restrained travel-photo collage. Day tabs support arrow-key navigation; the layout stacks on mobile. Decorative travel images are AI-generated illustrations.
+The minimal interface uses graphite surfaces, subtle frosted glass, system typography and generous whitespace. Budget and travel style expand on demand. Day tabs support arrow-key navigation; the layout stacks on mobile.
 
 ## Engineering decisions
 
