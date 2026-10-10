@@ -10,14 +10,47 @@ beforeEach(() => {
   cloudTrip = undefined;
   const generation = { mode: 'demo' as const, reason: 'not_configured' as const, catalogVersion: '2026-10-09-v1' };
   vi.mocked(api.generate).mockImplementation(async input => ({ trip: plan(input), generation }));
-  vi.mocked(api.save).mockImplementation(async input => { cloudTrip = { id: 'test-trip', createdAt: new Date().toISOString(), trip: plan(input), generation }; return cloudTrip; });
+  vi.mocked(api.save).mockImplementation(async (input, _id, schedule) => { cloudTrip = { id: 'test-trip', createdAt: new Date().toISOString(), trip: schedule ? applySchedule(input, schedule) : plan(input), generation }; return cloudTrip; });
   vi.mocked(api.list).mockImplementation(async () => ({ trips: cloudTrip ? [cloudTrip] : [] }));
 });
-import { plan, defaultInput } from '../src/planner';
+import { plan, defaultInput, applySchedule } from '../src/planner';
 
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 describe('planner interactions', () => {
+  it.each(['Rishikesh', 'Udaipur', 'Pondicherry'])('plans %s from the destination selector', async destination => {
+    const user = userEvent.setup(); render(<App />);
+    await user.selectOptions(screen.getByLabelText('Destination'), destination);
+    await user.click(screen.getByRole('button', { name: 'Plan my escape' }));
+    expect(api.generate).toHaveBeenLastCalledWith(expect.objectContaining({ destination }));
+    const expected = plan({ ...defaultInput, destination });
+    expect(screen.getByRole('heading', { name: expected.itinerary[0].morning })).toBeInTheDocument();
+  });
+
+  it('submits a selected mood without making requests before planning', async () => {
+    const user = userEvent.setup(); render(<App />);
+    await user.click(screen.getByText('Budget & preferences'));
+    await user.click(screen.getByRole('button', { name: 'Food trail' }));
+    expect(screen.getByRole('button', { name: 'Food trail' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: 'Plan my escape' }));
+    expect(api.generate).toHaveBeenLastCalledWith(expect.objectContaining({ style: 'food' }));
+    expect(screen.getByRole('heading', { name: 'Local breakfast and tea' })).toBeInTheDocument();
+  });
+  it('replaces, swaps, undoes, and saves the edited itinerary', async () => {
+    const user = userEvent.setup(); render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Edit itinerary' }));
+    await user.selectOptions(screen.getByLabelText('Activity for day 1 morning'), 'Craft shopping');
+    await user.selectOptions(screen.getByLabelText('Swap day 1 morning with'), '3');
+    expect(screen.getByLabelText('Activity for day 2 morning')).toHaveValue('Craft shopping');
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(screen.getByLabelText('Activity for day 1 morning')).toHaveValue('Craft shopping');
+    await user.click(screen.getByRole('button', { name: 'Done editing' }));
+    await user.click(screen.getByRole('button', { name: 'Save this trip' }));
+    expect(cloudTrip?.trip.itinerary[0].morning).toBe('Craft shopping');
+    await user.click(screen.getByRole('button', { name: 'Plan my escape' }));
+    await user.click(screen.getByRole('button', { name: 'My saved trip' }));
+    expect(screen.getByRole('heading', { name: 'Craft shopping' })).toBeInTheDocument();
+  });
   it('submits form choices and reports an over-budget trip', async () => {
     const user = userEvent.setup(); render(<App />);
     await user.selectOptions(screen.getByLabelText('Destination'), 'Goa');

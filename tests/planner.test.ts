@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultInput, plan } from '../src/planner';
+import { destinations } from '../src/types';
 
 describe('trip planning', () => {
   it('scales estimates by days and group size', () => {
@@ -12,7 +13,7 @@ describe('trip planning', () => {
     expect(() => plan(typeof value === 'object' && value !== null ? { ...defaultInput, ...value } : value)).toThrow();
   });
   it('supports every destination and style for seven days', () => {
-    for (const destination of ['Jaipur', 'Goa', 'Manali']) for (const style of ['balanced', 'nature', 'culture']) {
+    for (const destination of destinations) for (const style of ['balanced', 'nature', 'culture', 'slow', 'food']) {
       const trip = plan({ ...defaultInput, destination, style, days: 7 });
       expect(trip.itinerary).toHaveLength(7);
       expect(trip.itinerary[6].day).toBe(7);

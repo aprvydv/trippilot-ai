@@ -16,6 +16,21 @@ export const guides: Record<TripInput['destination'], DestinationGuide> = {
     ['A day outdoors', 'Solang Valley (weather permitting)', 'Riverside break', 'Return to town'],
     ['Slow down in the hills', 'Vashisht village', 'Local market', 'Quiet mountain evening'],
   ] },
+  Rishikesh: { nickname: 'the Himalayan foothills', daily: 2200, days: [
+    ['Riverbanks & old temples', 'Triveni Ghat riverside walk', 'Bharat Mandir', 'Local vegetarian dinner'],
+    ['Art & ashrams', 'Beatles Ashram', 'Gita Bhawan', 'Parmarth Niketan riverside walk'],
+    ['A quieter day by the Ganges', 'Tapovan café breakfast', 'Riverside walk on a marked local route', 'Rishikesh market stroll'],
+  ] },
+  Udaipur: { nickname: 'the City of Lakes', daily: 2600, days: [
+    ['Palaces & old streets', 'City Palace Museum', 'Jagdish Temple', 'Gangaur Ghat sunset walk'],
+    ['Gardens & lake views', 'Saheliyon Ki Bari', 'Fateh Sagar promenade', 'Local Mewari dinner'],
+    ['Folk art & the lakeside', 'Bagore Ki Haveli Museum', 'Bharatiya Lok Kala Mandal', 'Lake Pichola lakeside walk'],
+  ] },
+  Pondicherry: { nickname: 'the French Quarter coast', daily: 2500, days: [
+    ['Sea air & heritage streets', 'Promenade Beach walk', 'French Quarter heritage walk', 'Local Tamil dinner'],
+    ['Museums & market life', 'Puducherry Museum', 'Bharathi Park', 'Goubert Market stroll'],
+    ['Gardens & a slower afternoon', 'Puducherry Botanical Garden', 'Manakula Vinayagar Temple', 'French Quarter café meal'],
+  ] },
 };
 
 // Validate at runtime as well as compile time: local storage and future API data are untrusted.
@@ -40,11 +55,32 @@ export function plan(value: unknown): Trip {
     itinerary: Array.from({ length: input.days }, (_, i) => {
       const base = guide.days[i % guide.days.length];
       return { day: i + 1, title: i >= 3 ? 'Revisit favourites & explore at your pace' : base[0],
-        morning: input.style === 'nature' ? 'A relaxed scenic walk; confirm a safe local route' : base[1],
-        afternoon: input.style === 'culture' ? 'Explore local heritage and crafts' : base[2], evening: base[3] };
+        morning: input.style === 'slow' ? 'A slow breakfast and free morning' : input.style === 'food' ? 'Local breakfast and tea' : input.style === 'nature' ? 'A relaxed scenic walk; confirm a safe local route' : base[1],
+        afternoon: input.style === 'slow' ? 'Unhurried café break and time to explore' : input.style === 'food' ? 'Local market and regional lunch' : input.style === 'culture' ? 'Explore local heritage and crafts' : base[2], evening: input.style === 'food' ? base[3].toLowerCase().match(/food|dinner|café/) ? base[3] : 'Regional dinner; ask locally about dietary requirements' : input.style === 'slow' ? 'An easy evening close to your stay' : base[3] };
     }),
   };
 }
 
 export const defaultInput: TripInput = { destination: 'Jaipur', days: 3, travellers: 2, budget: 18000, style: 'balanced' };
 export const rupees = (amount: number): string => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+
+export const moods = [
+  { value: 'balanced', label: 'Balanced' }, { value: 'slow', label: 'Slow weekend' },
+  { value: 'food', label: 'Food trail' }, { value: 'nature', label: 'Outdoors' },
+  { value: 'culture', label: 'Culture' },
+] as const;
+export const slots = ['morning', 'afternoon', 'evening'] as const;
+export function activityOptions(destination: TripInput['destination']): string[] {
+  return [...new Set([...guides[destination].days.flatMap(day => day.slice(1)),
+    ...travelStyles.flatMap(style => plan({ ...defaultInput, destination, style }).itinerary.flatMap(day => slots.map(slot => day[slot]))),
+  ])];
+}
+// Only catalog-backed choices are accepted. Costs and day numbers are always recomputed.
+export function applySchedule(input: TripInput, value: unknown): Trip {
+  const trip = plan(input);
+  const allowed = new Set(activityOptions(trip.destination));
+  if (!Array.isArray(value) || value.length !== trip.days || value.some(day => !Array.isArray(day) || day.length !== 3 || day.some(activity => typeof activity !== 'string' || !allowed.has(activity)))) {
+    throw new Error('Choose three curated activities for each trip day.');
+  }
+  return { ...trip, itinerary: trip.itinerary.map((day, i) => ({ ...day, morning: value[i][0], afternoon: value[i][1], evening: value[i][2] })) };
+}

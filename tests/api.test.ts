@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleApi as rawHandleApi } from '../server/api';
 import type { SavedTrip } from '../server/repository';
-import { defaultInput } from '../src/planner';
+import { defaultInput, plan, slots } from '../src/planner';
 import { activities } from '../server/catalog';
 type TestResponse = Omit<Response, 'json'> & { json(): Promise<SavedTrip & { trips: SavedTrip[]; planId: string }> };
 async function handleApi(...args: Parameters<typeof rawHandleApi>): Promise<TestResponse> { return await rawHandleApi(...args) as unknown as TestResponse; }
@@ -28,6 +28,23 @@ function req(path: string, method = 'GET', body?: unknown, owner: string | null 
 }
 
 describe('REST API and SQL integration', () => {
+  it('persists a validated edited schedule with server costs and no provider call', async () => {
+    const schedule = plan(defaultInput).itinerary.map(day => slots.map(slot => day[slot]));
+    [schedule[0][0], schedule[1][2]] = [schedule[1][2], schedule[0][0]];
+    const fetcher = vi.fn();
+    const result = await handleApi(req('/trips', 'POST', { ...defaultInput, schedule, estimate: 1, generation: { mode: 'ai' } }), { DB: db, AI_ENABLED: 'true', OPENAI_API_KEY: 'test-only' }, fetcher);
+    expect(result.status).toBe(201); const saved = await result.json();
+    expect(saved.trip.itinerary[0].morning).toBe(schedule[0][0]);
+    expect(saved.trip.itinerary[1].evening).toBe(schedule[1][2]);
+    expect(saved.trip.estimate).toBe(13200); expect(saved.generation).toMatchObject({ mode: 'demo', edited: true });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect((await (await handleApi(req('/trips'), { DB: db })).json()).trips[0].trip).toEqual(saved.trip);
+    expect((await handleApi(req(`/trips/${saved.id}`, 'GET', undefined, 'bob'), { DB: db })).status).toBe(404);
+  });
+  it.each([null, [], [['Amber Fort']], Array.from({ length: 3 }, () => ['Unknown activity', 'Amber Fort', 'Amber Fort']), Array.from({ length: 3 }, () => ['Hadimba Temple', 'Amber Fort', 'Amber Fort'])])('rejects malformed or ungrounded edited schedules', async schedule => {
+    expect((await handleApi(req('/trips', 'POST', { ...defaultInput, schedule }), { DB: db })).status).toBe(400);
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM trips').get()?.n).toBe(0);
+  });
   it('saves exactly the generated draft without another AI request', async () => {
     const fetcher = vi.fn();
     const generated = await (await handleApi(req('/plan', 'POST', defaultInput), { DB: db }, fetcher)).json();

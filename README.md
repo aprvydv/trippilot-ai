@@ -2,7 +2,7 @@
 
 **Plan a short escape. Keep the itinerary. Know how it was generated.**
 
-A full-stack travel-planning portfolio project built with React and TypeScript. Choose Jaipur, Goa or Manali, set a group budget and travel style, then generate a day-by-day itinerary, save it to your account or export it as JSON.
+A full-stack travel-planning portfolio project built with React and TypeScript. Choose Jaipur, Goa, Manali, Rishikesh, Udaipur or Pondicherry, set a group budget and travel style, then generate a day-by-day itinerary, save it to your account or export it as JSON.
 
 [![TripPilot checks](https://github.com/aprvydv/trippilot-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/aprvydv/trippilot-ai/actions/workflows/ci.yml)
 
@@ -16,7 +16,9 @@ A full-stack travel-planning portfolio project built with React and TypeScript. 
 
 ## What you can do
 
-- **Plan a short trip:** three curated destinations, 1–7 days and 1–10 travellers, with balanced, culture or nature preferences.
+- **Personalize your plan:** replace curated activities, drag or swap them across days, and undo edits before saving.
+- **Export a trip pass:** download a portrait PNG with optional dates; it is a plan, not a booking.
+- **Plan a short trip:** six curated destinations, 1–7 days and 1–10 travellers, with Balanced, Culture, Outdoors, Slow weekend or Food trail moods.
 - **Compare the group budget:** illustrative stay, meal and local-transport estimates, with an over/under-budget summary.
 - **Save the displayed itinerary:** a generated draft ID preserves the exact plan without another AI request.
 - **Restore your latest saved trip:** account-scoped SQL records, with a legacy browser-storage import when no server trip exists.
@@ -120,7 +122,7 @@ These checks do not establish live-provider success or replace end-to-end testin
 
 ## Scope and limitations
 
-- Grounding uses curated project data, not live web research. Destinations are limited to Jaipur, Goa and Manali.
+- Grounding uses curated project data, not live web research. Destinations are limited to Jaipur, Goa, Manali, Rishikesh, Udaipur and Pondicherry.
 - Costs are illustrative and exclude travel to the destination, admission tickets and paid activities.
 - Opening hours, weather, safety conditions and availability are not verified. There is no booking integration.
 - The current [hosted deployment](https://trippilot-ai-aprvydv.amberpoppy.chatgpt.site) is owner-private. Reviewers can use the screenshots or run the project locally. Public sharing requires reviewing authentication and abuse controls.
@@ -138,3 +140,5 @@ These are planned, not implemented:
 ## Development transparency
 
 AI coding assistance was used during implementation. The committed source is available for review; credentials, runtime data and generated build output are ignored. The project is presented as an AI-ready planner with a working deterministic demo, not as a verified live travel or booking service.
+
+Activity tags, illustrative per-person costs and destination reference notes are documented in [the catalog guide](docs/catalog.md).

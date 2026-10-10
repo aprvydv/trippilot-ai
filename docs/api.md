@@ -17,7 +17,7 @@ All responses are JSON and use `Cache-Control: no-store`. Except health, endpoin
 {"destination":"Jaipur","days":3,"travellers":2,"budget":18000,"style":"balanced"}
 ```
 
-Destinations: Jaipur, Goa, Manali. Days: integer 1–7. Travellers: integer 1–10. Budget: finite number 1000–1000000 rupees for the group. Styles: balanced, culture, nature. Derived costs, itinerary content, provenance and owner IDs from the client are ignored.
+Destinations: Jaipur, Goa, Manali, Rishikesh, Udaipur, Pondicherry. Days: integer 1–7. Travellers: integer 1–10. Budget: finite number 1000–1000000 rupees for the group. Styles: balanced, culture, nature, slow, food. Derived costs, itinerary content, provenance and owner IDs from the client are ignored.
 
 `POST /api/plan` responds with `trip`, `generation` and `planId` when SQL storage is available. Generation contains `mode` (ai/demo), a reason, and catalog version. To save the exact displayed plan, send the same validated inputs plus its `planId` to `POST /api/trips`. The server marks that owned draft saved without calling the AI again. Repeated saves of the same ID do not create duplicates. Unsaved drafts older than 24 hours are pruned on that user's next generation request. Saved trips do not expire. When no draft ID exists (initial demo or imported legacy trip), the server computes the trip from inputs before saving it.
 
@@ -42,3 +42,5 @@ AI outages return a valid 200 demo plan with `generation.reason: "provider_unava
 ## Integration tests
 
 `tests/api.test.ts` calls the HTTP handler with real Request/Response objects and a real SQLite database initialized from committed migrations. A narrow D1 compatibility wrapper binds parameters to SQLite. Tests cover CRUD, owner isolation, draft saving, validation, request limits, database errors, grounded AI selections and fallback behavior. Provider responses are mocked; no paid API requests are made by tests. This is not a live-provider or real-browser test.
+
+For an edited itinerary, `POST /api/trips` accepts `schedule`: one array of three curated activity names (morning, afternoon, evening) per trip day. The server validates destination membership and day count, recomputes costs and saves the supplied order without calling a provider. This result is marked `generation.edited=true`.

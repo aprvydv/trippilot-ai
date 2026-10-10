@@ -23,3 +23,12 @@ The user requested a simpler Apple-inspired interface, superseding the earlier I
 - API identity and AI settings are unchanged. Authenticated hosted save/restore and live AI were not retested in browser.
 
 No blocking layout issues observed at the checked desktop/mobile sizes. No external paid assets or new dependencies.
+
+## Mood, editing, pass export and destination expansion
+
+- Automated verification: TypeScript passes; 67 tests pass across catalog, planner, UI, API/SQL and feature helpers.
+- New destination coverage checks all six catalogs for unique IDs, complete guide coverage, valid tags and nonnegative INR estimates; selector tests plan Rishikesh, Udaipur and Pondicherry.
+- The destination expansion adds guide data only; planner algorithms and budget calculations remain unchanged from the mood/editor implementation.
+- Earlier browser checks in this implementation verified mood selection, desktop drag-and-drop, mobile swap controls, date-range rendering and the PNG download event. The exported file bytes were not available for independent inspection. Native pass preview captured in `docs/images/trip-pass-preview.jpg`.
+- New destination selector behavior is verified through UI tests; no fresh browser pass was performed for the data expansion.
+- Authenticated edits, save/restore and isolation are checked with the SQL integration suite; no live provider result is claimed.

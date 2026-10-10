@@ -34,7 +34,7 @@ The adapter calls the fixed OpenAI Chat Completions endpoint with strict structu
 
 `/api/health` reports configuration only. An `ai: "configured"` result does not prove a successful provider request. Verify a newly generated trip's `generation.mode` before claiming live AI works.
 
-Destination grounding uses `server/catalog.ts`, version `2026-10-09-v1`, built from the project's curated suggestions. It does not claim live availability, sourced prices, or externally verified travel data. AI rearranges allowed activities; it does not browse or book.
+Destination grounding uses `server/catalog.ts`, version `2026-10-10-v3`, built from the project's curated suggestions. It does not claim live availability, sourced prices, or externally verified travel data. AI rearranges allowed activities; it does not browse or book.
 
 ## Publication and CI
 

@@ -1,5 +1,6 @@
-import { parseTripInput } from '../src/planner';
+import { applySchedule, parseTripInput } from '../src/planner';
 import { generateTrip, type AISettings } from './ai';
+import { catalogVersion } from './catalog';
 import { TripRepository } from './repository';
 export interface ApiEnv extends AISettings { DB?: D1Database }
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
@@ -15,7 +16,8 @@ async function input(request: Request) {
   try {
     const raw = JSON.parse(new TextDecoder().decode(bytes)); const parsed = parseTripInput(raw);
     if (raw.planId !== undefined && (typeof raw.planId !== 'string' || !/^[a-f0-9-]{36}$/.test(raw.planId))) throw new Error('Invalid plan identifier.');
-    return { ...parsed, planId: raw.planId as string | undefined };
+    const editedTrip = raw.schedule === undefined ? undefined : applySchedule(parsed, raw.schedule);
+    return { ...parsed, planId: raw.planId as string | undefined, editedTrip };
   } catch (error) { throw new ApiError(400, error instanceof SyntaxError ? 'Malformed JSON.' : error instanceof Error ? error.message : 'Invalid input.'); }
 }
 export async function handleApi(request: Request, env: ApiEnv, fetcher: typeof fetch = fetch): Promise<Response> {
@@ -42,8 +44,9 @@ export async function handleApi(request: Request, env: ApiEnv, fetcher: typeof f
     const repo = new TripRepository(env.DB); const id = match[1];
     if (request.method === 'GET') { if (!id) return json({ trips: await repo.list(owner) }); const trip = await repo.get(owner, id); return trip ? json(trip) : json({ error: 'Trip not found.' }, 404); }
     if (request.method === 'POST' && !id) {
-      // Recompute server-side. Clients cannot set costs, provenance or arbitrary itinerary text.
+      // Recompute costs; edited schedules are restricted to the curated destination catalog.
       const value = await input(request);
+      if (value.editedTrip) return json(await repo.save(owner, { trip: value.editedTrip, generation: { mode: 'demo', reason: 'not_configured', catalogVersion, edited: true } }), 201);
       if (value.planId) { const saved = await repo.markSaved(owner, value.planId); return saved ? json(saved, 201) : json({ error: 'Plan not found. Generate a new trip and try again.' }, 404); }
       return json(await repo.save(owner, await generateTrip(value, env, fetcher)), 201);
     }

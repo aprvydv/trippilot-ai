@@ -2,7 +2,7 @@ import { plan } from '../src/planner';
 import { activities, catalogVersion } from './catalog';
 import type { Trip, TripInput } from '../src/types';
 
-export interface GeneratedTrip { trip: Trip; planId?: string; generation: { mode: 'ai' | 'demo'; reason: 'configured' | 'not_configured' | 'provider_unavailable'; catalogVersion: string } }
+export interface GeneratedTrip { trip: Trip; planId?: string; generation: { mode: 'ai' | 'demo'; reason: 'configured' | 'not_configured' | 'provider_unavailable'; catalogVersion: string; edited?: boolean } }
 export interface AISettings { OPENAI_API_KEY?: string; AI_ENABLED?: string; AI_MODEL?: string }
 type Fetcher = typeof fetch;
 const slotNames = ['morning', 'afternoon', 'evening'] as const;

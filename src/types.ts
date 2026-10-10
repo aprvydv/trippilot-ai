@@ -1,6 +1,6 @@
-export const destinations = ['Jaipur', 'Goa', 'Manali'] as const;
+export const destinations = ['Jaipur', 'Goa', 'Manali', 'Rishikesh', 'Udaipur', 'Pondicherry'] as const;
 export type Destination = typeof destinations[number];
-export const travelStyles = ['balanced', 'culture', 'nature'] as const;
+export const travelStyles = ['balanced', 'culture', 'nature', 'slow', 'food'] as const;
 export type TravelStyle = typeof travelStyles[number];
 
 export interface TripInput {

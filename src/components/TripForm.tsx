@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { ArrowRight, Minus, Plus } from '@phosphor-icons/react';
+import { moods } from '../planner';
 import { destinations, type TripInput } from '../types';
 
 interface Props { input: TripInput; onChange: (input: TripInput) => void; onSubmit: () => void; busy?: boolean }
@@ -12,9 +13,9 @@ export function TripForm({ input, onChange, onSubmit, busy }: Props) {
     <div className="primary-fields"><div className="field"><label htmlFor="destination">Destination</label><select id="destination" value={input.destination} onChange={e => update('destination', e.target.value as TripInput['destination'])}>{destinations.map(place => <option key={place}>{place}</option>)}</select></div>
     {stepper('days', 'Days', 7)}{stepper('travellers', 'Travellers', 10)}
     <button className="primary" type="submit" disabled={busy}>{busy ? 'Planning…' : 'Plan my escape'}<ArrowRight size={18} aria-hidden="true" /></button></div>
-    <details className="preferences" open={preferencesOpen} onToggle={e => setPreferencesOpen(e.currentTarget.open)}><summary>Budget & preferences<span>{Number.isFinite(input.budget) ? `₹${input.budget.toLocaleString('en-IN')}` : 'Set budget'} · {input.style}</span></summary><div className="preference-fields">
+    <details className="preferences" open={preferencesOpen} onToggle={e => setPreferencesOpen(e.currentTarget.open)}><summary>Budget & preferences<span>{Number.isFinite(input.budget) ? `₹${input.budget.toLocaleString('en-IN')}` : 'Set budget'} · {moods.find(m => m.value === input.style)?.label}</span></summary><div className="preference-fields">
     <div className="field"><label htmlFor="budget">Group budget (₹)</label><input id="budget" aria-label="Total budget for the group (₹)" type="number" min="1000" max="1000000" step="100" required onInvalid={() => setPreferencesOpen(true)} value={Number.isNaN(input.budget) ? '' : input.budget} onChange={e => update('budget', e.target.valueAsNumber)} /></div>
-    <div className="field"><label htmlFor="style">Travel style</label><select id="style" value={input.style} onChange={e => update('style', e.target.value as TripInput['style'])}><option value="balanced">Balanced</option><option value="culture">Culture</option><option value="nature">Nature</option></select></div>
+    <div className="field mood-field"><span id="mood-label">Travel mood</span><div className="mood-options" role="group" aria-labelledby="mood-label">{moods.map(mood => <button type="button" key={mood.value} aria-pressed={input.style === mood.value} disabled={busy} onClick={() => update('style', mood.value)}>{mood.label}</button>)}</div><p>Applies when you select Plan my escape.</p></div>
     </div></details>
   </form>;
 }
